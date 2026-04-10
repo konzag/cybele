@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Κυνήγι Δαιμόνων της Κυβελίτσας!</title>
+<style>
+  :root {
+    --bg: #fff9c4;
+    --bg2: #ffe0f0;
+    --accent: #ff6ec7;
+    --accent2: #a78bfa;
+    --text: #3d2b6b;
+    --monster-glow: none;
+    --flashlight: none;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', 'Arial Rounded MT Bold', Arial, sans-serif;
+    background: linear-gradient(135deg, var(--bg) 0%, var(--bg2) 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+    transition: background 0.5s;
+    cursor: default;
+    user-select: none;
+  }
+
+  body.night {
+    --bg: #1a1035;
+    --bg2: #0d0820;
+    --text: #f0e6ff;
+    background: radial-gradient(ellipse at center, #2d1b69 0%, #0d0820 100%);
+  }
+  body.night::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: var(--flashlight);
+    z-index: 5;
+  }
+
+  /* ─── HEADER ─── */
+  #header {
+    text-align: center;
+    padding: 18px 10px 8px;
+    position: relative;
+    z-index: 10;
+  }
+  #title {
+    font-size: clamp(1.6rem, 5vw, 3rem);
+    color: var(--text);
+    text-shadow: 2px 2px 0 #fff, 0 0 20px var(--accent);
+    letter-spacing: 1px;
+    line-height: 1.2;
+  }
+  body.night #title { text-shadow: 2px 2px 0 #2d1b69, 0 0 25px #c084fc; color: #f0e6ff; }
+
+  /* ─── TOP BAR ─── */
+  #topbar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 16px;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 10;
+  }
+  .pill {
+    background: linear-gradient(135deg, #ff6ec7, #a78bfa);
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 26px;
+    font-size: clamp(1.1rem, 3vw, 1.5rem);
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(167,139,250,0.5);
+    transition: transform .15s, box-shadow .15s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .pill:active { transform: scale(0.93); box-shadow: 0 2px 8px rgba(167,139,250,0.4); }
+  #counter {
+    font-size: clamp(1.3rem, 4vw, 2rem);
+    color: var(--text);
+    background: rgba(255,255,255,0.6);
+    border-radius: 50px;
+    padding: 10px 22px;
+    font-weight: bold;
+    backdrop-filter: blur(4px);
+  }
+  body.night #counter { background: rgba(45,27,105,0.7); color: #e9d5ff; }
+
+  /* ─── COLOR/NUMBER INFO ─── */
+  #info-box {
+    text-align: center;
+    min-height: 44px;
+    font-size: clamp(1.1rem, 3.5vw, 1.7rem);
+    color: var(--text);
+    font-weight: bold;
+    padding: 4px 16px;
+    position: relative;
+    z-index: 10;
+    transition: opacity .3s;
+  }
+  body.night #info-box { color: #e9d5ff; }
+
+  /* ─── GAME ARENA ─── */
+  #arena {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 280px);
+    min-height: 320px;
+    overflow: hidden;
+  }
+
+  /* ─── MONSTERS ─── */
+  .monster {
+    position: absolute;
+    font-size: clamp(52px, 10vw, 90px);
+    cursor: pointer;
+    line-height: 1;
+    transition: transform .2s;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+    animation: floaty 3s ease-in-out infinite;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    z-index: 6;
+  }
+  body.night .monster {
+    filter: drop-shadow(0 0 14px #c084fc) drop-shadow(0 0 28px #818cf8);
+  }
+  .monster:hover { transform: scale(1.15) rotate(-8deg); }
+  .monster:active { transform: scale(0.85); }
+  @keyframes floaty {
+    0%,100% { transform: translateY(0) rotate(-3deg); }
+    50%      { transform: translateY(-14px) rotate(3deg); }
+  }
+  .monster.pop {
+    animation: pop-out .5s forwards;
+  }
+  @keyframes pop-out {
+    0%   { transform: scale(1); opacity: 1; }
+    40%  { transform: scale(1.6) rotate(20deg); opacity: 0.8; }
+    100% { transform: scale(0) rotate(-30deg); opacity: 0; }
+  }
+
+  /* ─── SPARKLES ─── */
+  .sparkle {
+    position: absolute;
+    pointer-events: none;
+    font-size: 1.8rem;
+    animation: sparkle-fly .8s ease-out forwards;
+    z-index: 20;
+  }
+  @keyframes sparkle-fly {
+    0%   { transform: translate(0,0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+  }
+
+  /* ─── CELEBRATION ─── */
+  #celebration {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #ffd6ec 0%, #d8b4fe 50%, #fef08a 100%);
+    z-index: 100;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+    animation: cele-in .5s ease-out;
+  }
+  body.night #celebration { background: linear-gradient(135deg, #2e1065 0%, #1e1b4b 50%, #0f172a 100%); }
+  @keyframes cele-in { from { opacity:0; transform: scale(.8); } to { opacity:1; transform: scale(1); } }
+  #celebration.show { display: flex; }
+  #cele-text {
+    font-size: clamp(2rem, 6vw, 4rem);
+    font-weight: bold;
+    color: #6d28d9;
+    text-shadow: 3px 3px 0 #fff, 0 0 30px #fbbf24;
+    line-height: 1.3;
+    margin-bottom: 20px;
+  }
+  body.night #cele-text { color: #e9d5ff; text-shadow: 3px 3px 0 #2e1065, 0 0 30px #c084fc; }
+  #cele-sub {
+    font-size: clamp(1.2rem, 3.5vw, 2rem);
+    color: #7c3aed;
+    margin-bottom: 30px;
+  }
+  body.night #cele-sub { color: #c4b5fd; }
+
+  /* ─── CONFETTI ─── */
+  .confetti-piece {
+    position: fixed;
+    width: 12px;
+    height: 16px;
+    border-radius: 3px;
+    top: -20px;
+    animation: confetti-fall linear forwards;
+    z-index: 101;
+    pointer-events: none;
+  }
+  @keyframes confetti-fall {
+    0%   { transform: translateY(0) rotate(0deg) translateX(0); opacity: 1; }
+    80%  { opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg) translateX(var(--cx)); opacity: 0; }
+  }
+
+  /* ─── NIGHT TOGGLE ─── */
+  #night-btn {
+    background: linear-gradient(135deg, #fbbf24, #f97316);
+    color: #fff;
+  }
+  body.night #night-btn { background: linear-gradient(135deg, #6d28d9, #3b82f6); }
+
+  /* ─── FLOATING STARS (night mode) ─── */
+  .star-bg {
+    position: fixed;
+    font-size: 1.4rem;
+    pointer-events: none;
+    z-index: 1;
+    animation: star-twinkle var(--dur) ease-in-out infinite;
+    opacity: 0;
+  }
+  @keyframes star-twinkle {
+    0%,100% { opacity: 0; transform: scale(0.5); }
+    50%      { opacity: .9; transform: scale(1.1); }
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 480px) {
+    .pill { padding: 10px 18px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ BACKGROUND STARS (night) ══ -->
+<div id="stars-layer"></div>
+
+<!-- ══ CELEBRATION SCREEN ══ -->
+<div id="celebration">
+  <div id="cele-text">ΜΠΡΑΒΟ ΚΥΒΕΛΙΤΣΑ!<br>🌟💜🎉</div>
+  <div id="cele-sub">Είσαι η καλύτερη<br>Κυνηγός Δαιμόνων!<br>💪🌟</div>
+  <button class="pill" id="play-again-btn" onclick="playAgain()">🔄 Παίξε Ξανά!</button>
+</div>
+
+<!-- ══ HEADER ══ -->
+<div id="header">
+  <div id="title">👾 Κυνήγι Δαιμόνων<br>της Κυβελίτσας! 👾</div>
+</div>
+
+<!-- ══ TOP BAR ══ -->
+<div id="topbar">
+  <button class="pill" id="night-btn" onclick="toggleNight()">🌙 Νύχτα</button>
+  <div id="counter">Έπιασες 0 δαιμονάκια! 🎉</div>
+  <button class="pill" onclick="spawnWave()">🎮 Νέο Κύμα!</button>
+</div>
+
+<!-- ══ INFO BOX ══ -->
+<div id="info-box"></div>
+
+<!-- ══ ARENA ══ -->
+<div id="arena"></div>
+
+<script>
+'use strict';
+
+/* ─────────── AUDIO ─────────── */
+const AC = new (window.AudioContext || window.webkitAudioContext)();
+
+function resumeAC() { if (AC.state === 'suspended') AC.resume(); }
+
+function playPop(freq, type='sine') {
+  resumeAC();
+  const o = AC.createOscillator();
+  const g = AC.createGain();
+  o.connect(g); g.connect(AC.destination);
+  o.type = type;
+  o.frequency.setValueAtTime(freq, AC.currentTime);
+  o.frequency.exponentialRampToValueAtTime(freq * 2.2, AC.currentTime + 0.15);
+  g.gain.setValueAtTime(0.35, AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + 0.4);
+  o.start(); o.stop(AC.currentTime + 0.42);
+}
+
+function playCelebration() {
+  resumeAC();
+  const melody = [523,659,784,1047,784,1047,1319];
+  melody.forEach((f,i) => {
+    setTimeout(() => {
+      const o = AC.createOscillator();
+      const g = AC.createGain();
+      o.connect(g); g.connect(AC.destination);
+      o.type = 'triangle';
+      o.frequency.value = f;
+      g.gain.setValueAtTime(0.3, AC.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + 0.35);
+      o.start(); o.stop(AC.currentTime + 0.36);
+    }, i * 160);
+  });
+}
+
+/* ─────────── MONSTER DATA ─────────── */
+const MONSTERS = [
+  { emoji:'👾', color:'μωβ',     hex:'#a855f7', num:1 },
+  { emoji:'👹', color:'κόκκινος', hex:'#ef4444', num:2 },
+  { emoji:'👻', color:'άσπρος',  hex:'#e0e7ff', num:3 },
+  { emoji:'🐉', color:'πράσινος',hex:'#22c55e', num:4 },
+  { emoji:'🦄', color:'ροζ',     hex:'#ec4899', num:5 },
+  { emoji:'🐙', color:'μπλε',    hex:'#3b82f6', num:1 },
+  { emoji:'🦋', color:'μωβ',     hex:'#8b5cf6', num:2 },
+  { emoji:'🐸', color:'πράσινος',hex:'#16a34a', num:3 },
+  { emoji:'🦊', color:'πορτοκαλί',hex:'#f97316',num:4 },
+  { emoji:'⭐', color:'κίτρινος', hex:'#eab308', num:5 },
+];
+
+const SPARKLES = ['✨','💫','⭐','🌟','💥','🎉','🎊','💜','💛','🩷'];
+const COLORS_GR = {
+  'μωβ':'μΩΒ', 'κόκκινος':'ΚΟΚΚΙΝΟΣ','άσπρος':'ΑΣΠΡΟΣ',
+  'πράσινος':'ΠΡΑΣΙΝΟΣ','ροζ':'ΡΟΖ','μπλε':'ΜΠΛΕ',
+  'πορτοκαλί':'ΠΟΡΤΟΚΑΛΙ','κίτρινος':'ΚΙΤΡΙΝΟΣ',
+};
+const NUM_WORDS = ['','ΕΝΑΣ','ΔΥΟ','ΤΡΙΑ','ΤΕΣΣΕΡΑ','ΠΕΝΤΕ'];
+
+/* ─────────── STATE ─────────── */
+let caught = 0;
+let totalSpawned = 0;
+let aliveCount = 0;
+let isNight = false;
+let infoTimeout = null;
+
+const arena = document.getElementById('arena');
+const counterEl = document.getElementById('counter');
+const infoBox = document.getElementById('info-box');
+
+/* ─────────── SPAWN ─────────── */
+function spawnMonster(data, delay) {
+  setTimeout(() => {
+    const el = document.createElement('div');
+    el.className = 'monster';
+    el.textContent = data.emoji;
+    el.dataset.color = data.color;
+    el.dataset.hex   = data.hex;
+    el.dataset.num   = data.num;
+    el.style.animationDelay = (Math.random() * 2) + 's';
+    el.style.animationDuration = (2.5 + Math.random() * 2) + 's';
+
+    // random position (keep within arena bounds)
+    const maxX = Math.max(10, arena.offsetWidth - 100);
+    const maxY = Math.max(10, arena.offsetHeight - 110);
+    el.style.left = (10 + Math.random() * maxX) + 'px';
+    el.style.top  = (10 + Math.random() * maxY) + 'px';
+
+    el.addEventListener('click',  () => catchMonster(el));
+    el.addEventListener('touchend', e => { e.preventDefault(); catchMonster(el); }, {passive:false});
+
+    arena.appendChild(el);
+    aliveCount++;
+  }, delay);
+}
+
+function spawnWave() {
+  // clear leftover monsters
+  arena.querySelectorAll('.monster').forEach(m => m.remove());
+  caught = 0;
+  aliveCount = 0;
+  updateCounter();
+  showInfo('');
+
+  const count = 6 + Math.floor(Math.random() * 5); // 6-10 monsters
+  totalSpawned = count;
+  const shuffled = [...MONSTERS].sort(() => Math.random() - .5).slice(0, count);
+  shuffled.forEach((m, i) => spawnMonster(m, i * 120));
+}
+
+/* ─────────── CATCH ─────────── */
+function catchMonster(el) {
+  if (el.classList.contains('pop')) return;
+  resumeAC();
+
+  const color = el.dataset.color;
+  const num   = parseInt(el.dataset.num);
+  const hex   = el.dataset.hex;
+
+  playPop(400 + Math.random() * 400, ['sine','triangle','square'][Math.floor(Math.random()*3)]);
+  el.classList.add('pop');
+
+  // show info
+  showInfo(`Αυτός είναι <span style="color:${hex};font-size:1.2em">■</span> <b style="color:${hex}">${COLORS_GR[color]||color.toUpperCase()}</b> και είναι ο ΑΡΙΘΜΟΣ <b>${NUM_WORDS[num]}</b> ${num <= 5 ? '🔢' : ''}`);
+
+  spawnSparkles(el);
+
+  setTimeout(() => {
+    el.remove();
+    caught++;
+    aliveCount--;
+    updateCounter();
+    if (aliveCount <= 0) celebrate();
+  }, 480);
+}
+
+/* ─────────── SPARKLES ─────────── */
+function spawnSparkles(el) {
+  const rect = el.getBoundingClientRect();
+  const arenaRect = arena.getBoundingClientRect();
+  const cx = rect.left - arenaRect.left + rect.width / 2;
+  const cy = rect.top  - arenaRect.top  + rect.height / 2;
+
+  for (let i = 0; i < 8; i++) {
+    const s = document.createElement('div');
+    s.className = 'sparkle';
+    s.textContent = SPARKLES[Math.floor(Math.random() * SPARKLES.length)];
+    s.style.left = cx + 'px';
+    s.style.top  = cy + 'px';
+    const angle = (Math.PI * 2 * i) / 8;
+    const dist  = 50 + Math.random() * 70;
+    s.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+    s.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+    s.style.animationDuration = (.5 + Math.random() * .4) + 's';
+    arena.appendChild(s);
+    setTimeout(() => s.remove(), 1000);
+  }
+}
+
+/* ─────────── COUNTER ─────────── */
+function updateCounter() {
+  counterEl.textContent = `Έπιασες ${caught} δαιμονάκια! 🎉`;
+}
+
+/* ─────────── INFO BOX ─────────── */
+function showInfo(html) {
+  clearTimeout(infoTimeout);
+  infoBox.innerHTML = html;
+  if (html) infoTimeout = setTimeout(() => { infoBox.innerHTML = ''; }, 3500);
+}
+
+/* ─────────── CELEBRATE ─────────── */
+function celebrate() {
+  playCelebration();
+  launchConfetti();
+  document.getElementById('celebration').classList.add('show');
+}
+
+function playAgain() {
+  document.getElementById('celebration').classList.remove('show');
+  spawnWave();
+}
+
+/* ─────────── CONFETTI ─────────── */
+function launchConfetti() {
+  const colors = ['#ff6ec7','#a78bfa','#fbbf24','#34d399','#60a5fa','#f87171','#fff'];
+  for (let i = 0; i < 80; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti-piece';
+    c.style.left = Math.random() * 100 + 'vw';
+    c.style.background = colors[Math.floor(Math.random() * colors.length)];
+    c.style.setProperty('--cx', (Math.random() * 200 - 100) + 'px');
+    c.style.animationDuration = (2 + Math.random() * 3) + 's';
+    c.style.animationDelay = Math.random() * 1.5 + 's';
+    c.style.transform = `rotate(${Math.random()*360}deg)`;
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 5500);
+  }
+}
+
+/* ─────────── NIGHT MODE ─────────── */
+const nightBtn = document.getElementById('night-btn');
+
+function toggleNight() {
+  isNight = !isNight;
+  document.body.classList.toggle('night', isNight);
+  nightBtn.textContent = isNight ? '☀️ Μέρα' : '🌙 Νύχτα';
+  buildStars();
+}
+
+function buildStars() {
+  const layer = document.getElementById('stars-layer');
+  layer.innerHTML = '';
+  if (!isNight) return;
+  for (let i = 0; i < 40; i++) {
+    const s = document.createElement('div');
+    s.className = 'star-bg';
+    s.textContent = Math.random() > .5 ? '⭐' : '✨';
+    s.style.left = Math.random() * 100 + 'vw';
+    s.style.top  = Math.random() * 100 + 'vh';
+    s.style.setProperty('--dur', (1.5 + Math.random() * 3) + 's');
+    s.style.animationDelay = Math.random() * 3 + 's';
+    layer.appendChild(s);
+  }
+}
+
+/* ─────────── FLASHLIGHT (night) ─────────── */
+function updateFlashlight(x, y) {
+  if (!isNight) return;
+  document.body.style.setProperty('--flashlight',
+    `radial-gradient(circle 160px at ${x}px ${y}px,
+      transparent 0%, transparent 60%, rgba(0,0,0,0.88) 100%)`);
+}
+
+document.addEventListener('mousemove', e => updateFlashlight(e.clientX, e.clientY));
+document.addEventListener('touchmove', e => {
+  const t = e.touches[0];
+  updateFlashlight(t.clientX, t.clientY);
+}, {passive:true});
+
+/* ─────────── INIT ─────────── */
+spawnWave();
+</script>
+</body>
+</html>
