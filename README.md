@@ -1,5 +1,12 @@
 # 🌟 Το Πρόγραμμα της Κυβελίτσας 🌟
 
+**Άνοιγμα online:** [https://konzag.github.io/cybele/](https://konzag.github.io/cybele/)
+
+**Python setup:**
+```bash
+python -m pip install -r requirements.txt
+```
+
 ```
      /\   /\
     ( o   o )
