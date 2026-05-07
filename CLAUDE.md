@@ -1,35 +1,22 @@
-# cybele
+# Cybele — Claude Context
 
-## What is this
-A demon-hunting game built for Cybele (age 3, kindergarten), by her godfather.
-Cute, colorful, never scary. Two standalone programs.
+## Project
+Colorful early-learning browser and terminal games for Cybele (3 years old).
+HTML + CSS + JS (browser) + Python (terminal). Public GitHub Pages site.
+Φτιαγμένο με αγάπη από τον νονό της.
 
-## Files
-- `index.html` — Browser game (demon catching, colors & numbers, day/night mode, confetti)
-- `cybele.py` — Terminal game for Windows (5 mini-games: demon hunt, colors, numbers, melody, farewell)
+## Live Site
+https://konzag.github.io/cybele/
 
 ## Stack
-- HTML + CSS + JavaScript (vanilla, no frameworks, no build step)
-- Python 3 (colorama optional, winsound built-in Windows)
+- index.html: Demon-hunting game (tap emoji demons, colors + numbers in Greek, day/night mode)
+- cybele.py: Python terminal program (Windows, colorama + winsound)
+- No backend, no deploy pipeline, no database
 
-## How to run
-```bash
-# Browser app — just double-click index.html
-# Terminal app
-pip install colorama   # optional
-python cybele.py
-```
-
-## Key facts
-- Target user: Cybele, age 3
-- Language: Greek UI throughout
-- No backend, no database, no deployment
-- Repo: konzag/cybele
-- `.claude/` folder exists at repo root with Claude Code settings
-
-## Notes for Claude Code
-- Keep all UI text in Greek
-- Demon theme must stay cute and non-scary (ages 3)
-- Large buttons for small fingers (mobile/tablet first)
-- colorama import must have graceful fallback
-- winsound is Windows-only — terminal app targets Windows only
+## Rules
+- No auto-deploy needed (GitHub Pages serves static files automatically)
+- All content in Greek
+- Keep age-appropriate: 3 years old (νηπιαγωγείο), demon-hunting theme (cute, never scary)
+- Big buttons for small fingers
+- Sounds via Web Audio API (no external files)
+- Never add server-side code or dependencies requiring installation
