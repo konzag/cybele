@@ -280,12 +280,28 @@
 'use strict';
 
 /* ─────────── AUDIO ─────────── */
-const AC = new (window.AudioContext || window.webkitAudioContext)();
+// Created lazily on the first tap (browsers block audio before a gesture).
+// If Web Audio is unavailable the game keeps working, just silently.
+let AC = null;
 
-function resumeAC() { if (AC.state === 'suspended') AC.resume(); }
+function getAC() {
+  if (!AC) {
+    try {
+      const Ctor = window.AudioContext || window.webkitAudioContext;
+      if (!Ctor) return null;
+      AC = new Ctor();
+    } catch (e) {
+      return null;
+    }
+  }
+  if (AC.state === 'suspended') AC.resume();
+  return AC;
+}
+
+function resumeAC() { getAC(); }
 
 function playPop(freq, type='sine') {
-  resumeAC();
+  if (!getAC()) return;
   const o = AC.createOscillator();
   const g = AC.createGain();
   o.connect(g); g.connect(AC.destination);
@@ -298,7 +314,7 @@ function playPop(freq, type='sine') {
 }
 
 function playCelebration() {
-  resumeAC();
+  if (!getAC()) return;
   const melody = [523,659,784,1047,784,1047,1319];
   melody.forEach((f,i) => {
     setTimeout(() => {
@@ -330,7 +346,7 @@ const MONSTERS = [
 
 const SPARKLES = ['✨','💫','⭐','🌟','💥','🎉','🎊','💜','💛','🩷'];
 const COLORS_GR = {
-  'μωβ':'μΩΒ', 'κόκκινος':'ΚΟΚΚΙΝΟΣ','άσπρος':'ΑΣΠΡΟΣ',
+  'μωβ':'ΜΩΒ', 'κόκκινος':'ΚΟΚΚΙΝΟΣ','άσπρος':'ΑΣΠΡΟΣ',
   'πράσινος':'ΠΡΑΣΙΝΟΣ','ροζ':'ΡΟΖ','μπλε':'ΜΠΛΕ',
   'πορτοκαλί':'ΠΟΡΤΟΚΑΛΙ','κίτρινος':'ΚΙΤΡΙΝΟΣ',
 };
@@ -400,7 +416,7 @@ function catchMonster(el) {
   el.classList.add('pop');
 
   // show info
-  showInfo(`Αυτός είναι <span style="color:${hex};font-size:1.2em">■</span> <b style="color:${hex}">${COLORS_GR[color]||color.toUpperCase()}</b> και είναι ο ΑΡΙΘΜΟΣ <b>${NUM_WORDS[num]}</b> ${num <= 5 ? '🔢' : ''}`);
+  showInfo(`Αυτός είναι <span style="color:${hex};font-size:1.2em">■</span> <b style="color:${hex}">${COLORS_GR[color]||color.toUpperCase()}</b> και είναι ο ΑΡΙΘΜΟΣ <b>${NUM_WORDS[num]}</b> 🔢`);
 
   spawnSparkles(el);
 
@@ -504,11 +520,21 @@ function buildStars() {
 }
 
 /* ─────────── FLASHLIGHT (night) ─────────── */
+// Throttled to one style update per animation frame.
+let flashPos = null;
+let flashQueued = false;
 function updateFlashlight(x, y) {
   if (!isNight) return;
-  document.body.style.setProperty('--flashlight',
-    `radial-gradient(circle 160px at ${x}px ${y}px,
-      transparent 0%, transparent 60%, rgba(0,0,0,0.88) 100%)`);
+  flashPos = [x, y];
+  if (flashQueued) return;
+  flashQueued = true;
+  requestAnimationFrame(() => {
+    flashQueued = false;
+    const [fx, fy] = flashPos;
+    document.body.style.setProperty('--flashlight',
+      `radial-gradient(circle 160px at ${fx}px ${fy}px,
+        transparent 0%, transparent 60%, rgba(0,0,0,0.88) 100%)`);
+  });
 }
 
 document.addEventListener('mousemove', e => updateFlashlight(e.clientX, e.clientY));
