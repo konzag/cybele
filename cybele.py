@@ -76,7 +76,7 @@ def bravo():
     beep(1047, 120); pause(0.1)
     beep(1319, 200)
     print()
-    print_slow('  🌟 ΜΠΡΑΒΟ ΚΥΒΕΛΙΤΣΑ! Τα πήγες υπέρoχα! 🌟', 0.03, Fore.YELLOW + Style.BRIGHT)
+    print_slow('  🌟 ΜΠΡΑΒΟ ΚΥΒΕΛΙΤΣΑ! Τα πήγες υπέροχα! 🌟', 0.03, Fore.YELLOW + Style.BRIGHT)
     print_slow('  💜 Ο νονός σου είναι πολύ περήφανος! 💜',   0.03, Fore.MAGENTA)
     print()
     input(Fore.CYAN + '  Πάτα ENTER για να συνεχίσεις... ')
@@ -155,7 +155,7 @@ def game_hunting():
 # ══════════════════════════════════════════════
 
 COLOR_BLOCKS = [
-    (Fore.RED   + Back.RED,   '🔴', 'ΚΟΚΚΙΝΟ',    '🌹 μήλο'),
+    (Fore.RED   + Back.RED,   '🔴', 'ΚΟΚΚΙΝΟ',    '🍎 μήλο'),
     (Fore.BLUE  + Back.BLUE,  '🔵', 'ΜΠΛΕ',       '🌊 θάλασσα'),
     (Fore.GREEN + Back.GREEN, '🟢', 'ΠΡΑΣΙΝΟ',    '🌿 γρασίδι'),
     (Fore.YELLOW+ Back.YELLOW,'🟡', 'ΚΙΤΡΙΝΟ',    '☀️ ήλιος'),
@@ -168,7 +168,7 @@ def game_colors():
     print_slow('  Ας μάθουμε τα χρώματα μαζί!', 0.04, Fore.CYAN)
     pause(0.5)
 
-    for color_code, emoji, name, example in COLOR_BLOCKS:
+    for idx, (color_code, emoji, name, example) in enumerate(COLOR_BLOCKS):
         pause(0.3)
         print()
         # Μεγάλο μπλοκ χρώματος
@@ -176,8 +176,8 @@ def game_colors():
         print(color_code + Style.BRIGHT + f'   {emoji}        {emoji}  ' + Style.RESET_ALL)
         print(color_code + Style.BRIGHT + f'   {emoji}  {emoji}  {emoji}  {emoji}  {emoji}  ' + Style.RESET_ALL)
         print()
-        beep(440 + list([0,200,400,600,800])[COLOR_BLOCKS.index((color_code,emoji,name,example))], 150)
-        print_slow(f'  Τι χρώμα είναι αυτό;', 0.04, Fore.WHITE + Style.BRIGHT)
+        beep(440 + idx * 200, 150)
+        print_slow('  Τι χρώμα είναι αυτό;', 0.04, Fore.WHITE + Style.BRIGHT)
         pause(0.6)
         print_slow(f'  ➡️  Είναι {name}! Σαν το {example}!', 0.04, Style.BRIGHT)
         input(Fore.YELLOW + '  👉 Πάτα ENTER για το επόμενο χρώμα... ')
@@ -268,7 +268,7 @@ NOTE_ICONS = ['🎵', '🎶', '🎼', '🎵', '🎶']
 def game_song():
     clear()
     header('🎵  ΤΡΑΓΟΥΔΑΚΙ  🎵')
-    print_slow('  Ακού το τραγουδάκι, Κυβελίτσα!', 0.04, Fore.CYAN)
+    print_slow('  Άκου το τραγουδάκι, Κυβελίτσα!', 0.04, Fore.CYAN)
     print_slow('  (Αστεράκι αστεράκι)', 0.04, Fore.MAGENTA)
     pause(0.5)
 
@@ -301,7 +301,7 @@ def farewell():
     pause(0.2)
     print_slow('  Γεια σου Κυβελίτσα!', 0.05, Fore.CYAN + Style.BRIGHT)
     pause(0.3)
-    print_slow('  Τα πήγες υπέρoχα! 🌟', 0.04, Fore.YELLOW + Style.BRIGHT)
+    print_slow('  Τα πήγες υπέροχα! 🌟', 0.04, Fore.YELLOW + Style.BRIGHT)
     pause(0.3)
     print_slow('  Είσαι η καλύτερη κυνηγός δαιμόνων!', 0.04, Fore.MAGENTA + Style.BRIGHT)
     pause(0.3)
@@ -343,8 +343,19 @@ def main_menu():
     choice = input(Fore.YELLOW + Style.BRIGHT + '  👉 Πάτα έναν αριθμό (1-5): ').strip()
     return choice
 
+def safe_farewell():
+    """Αποχαιρετισμός· ένα δεύτερο Ctrl+C απλώς κλείνει χωρίς σφάλμα."""
+    try:
+        farewell()
+    except (KeyboardInterrupt, EOFError):
+        print()
+        sys.exit(0)
+
 def main():
-    welcome_screen()
+    try:
+        welcome_screen()
+    except (KeyboardInterrupt, EOFError):
+        safe_farewell()
     while True:
         try:
             choice = main_menu()
@@ -358,10 +369,8 @@ def main():
                 beep(200, 200)
                 print_slow('  ❓ Πάτα έναν αριθμό από το 1 ως το 5!', 0.03, Fore.RED)
                 pause(1)
-        except KeyboardInterrupt:
-            farewell()
-        except EOFError:
-            farewell()
+        except (KeyboardInterrupt, EOFError):
+            safe_farewell()
 
 if __name__ == '__main__':
     main()
