@@ -425,7 +425,9 @@ function catchMonster(el) {
     caught++;
     aliveCount--;
     updateCounter();
-    if (aliveCount <= 0) celebrate();
+    // Γιορτάζουμε μόνο όταν πιάστηκαν ΟΛΑ τα δαιμονάκια του κύματος
+    // (εμφανίζονται σταδιακά, οπότε το aliveCount μπορεί να μηδενίσει νωρίς).
+    if (caught >= totalSpawned) celebrate();
   }, 480);
 }
 
