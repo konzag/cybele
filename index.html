@@ -77,7 +77,7 @@
     z-index: 10;
   }
   .pill {
-    background: linear-gradient(135deg, #ff6ec7, #a78bfa);
+    background: linear-gradient(135deg, #db2777, #7c3aed);
     color: #fff;
     border: none;
     border-radius: 50px;
@@ -91,6 +91,11 @@
     -webkit-tap-highlight-color: transparent;
   }
   .pill:active { transform: scale(0.93); box-shadow: 0 2px 8px rgba(167,139,250,0.4); }
+  .pill:focus-visible, .monster:focus-visible {
+    outline: 4px solid var(--text);
+    outline-offset: 4px;
+  }
+  .monster:focus-visible { border-radius: 16px; }
   #counter {
     font-size: clamp(1.3rem, 4vw, 2rem);
     color: var(--text);
@@ -115,6 +120,8 @@
     transition: opacity .3s;
   }
   body.night #info-box { color: #e9d5ff; }
+  /* outline so light swatches (e.g. white) stay visible on the light background */
+  #info-box .swatch { font-size: 1.2em; text-shadow: 0 0 2px #3d2b6b; }
 
   /* ─── GAME ARENA ─── */
   #arena {
@@ -197,7 +204,7 @@
   body.night #cele-text { color: #e9d5ff; text-shadow: 3px 3px 0 #2e1065, 0 0 30px #c084fc; }
   #cele-sub {
     font-size: clamp(1.2rem, 3.5vw, 2rem);
-    color: #7c3aed;
+    color: #5b21b6;
     margin-bottom: 30px;
   }
   body.night #cele-sub { color: #c4b5fd; }
@@ -221,10 +228,10 @@
 
   /* ─── NIGHT TOGGLE ─── */
   #night-btn {
-    background: linear-gradient(135deg, #fbbf24, #f97316);
+    background: linear-gradient(135deg, #c2410c, #b45309);
     color: #fff;
   }
-  body.night #night-btn { background: linear-gradient(135deg, #6d28d9, #3b82f6); }
+  body.night #night-btn { background: linear-gradient(135deg, #6d28d9, #2563eb); }
 
   /* ─── FLOATING STARS (night mode) ─── */
   .star-bg {
@@ -244,6 +251,14 @@
   @media (max-width: 480px) {
     .pill { padding: 10px 18px; }
   }
+
+  /* ─── REDUCED MOTION ─── */
+  @media (prefers-reduced-motion: reduce) {
+    .monster, .star-bg, #celebration { animation: none; }
+    .star-bg { opacity: .6; }
+    .confetti-piece, .sparkle { display: none; }
+    .monster.pop { animation: none; opacity: 0; }
+  }
 </style>
 </head>
 <body>
@@ -252,7 +267,7 @@
 <div id="stars-layer"></div>
 
 <!-- ══ CELEBRATION SCREEN ══ -->
-<div id="celebration">
+<div id="celebration" role="dialog" aria-modal="true" aria-labelledby="cele-text">
   <div id="cele-text">ΜΠΡΑΒΟ ΚΥΒΕΛΙΤΣΑ!<br>🌟💜🎉</div>
   <div id="cele-sub">Είσαι η καλύτερη<br>Κυνηγός Δαιμόνων!<br>💪🌟</div>
   <button class="pill" id="play-again-btn" onclick="playAgain()">🔄 Παίξε Ξανά!</button>
@@ -260,18 +275,18 @@
 
 <!-- ══ HEADER ══ -->
 <div id="header">
-  <div id="title">👾 Κυνήγι Δαιμόνων<br>της Κυβελίτσας! 👾</div>
+  <div id="title" role="heading" aria-level="1">👾 Κυνήγι Δαιμόνων<br>της Κυβελίτσας! 👾</div>
 </div>
 
 <!-- ══ TOP BAR ══ -->
 <div id="topbar">
   <button class="pill" id="night-btn" onclick="toggleNight()">🌙 Νύχτα</button>
-  <div id="counter">Έπιασες 0 δαιμονάκια! 🎉</div>
-  <button class="pill" onclick="spawnWave()">🎮 Νέο Κύμα!</button>
+  <div id="counter" aria-live="polite">Έπιασες 0 δαιμονάκια! 🎉</div>
+  <button class="pill" id="wave-btn" onclick="spawnWave()">🎮 Νέο Κύμα!</button>
 </div>
 
 <!-- ══ INFO BOX ══ -->
-<div id="info-box"></div>
+<div id="info-box" aria-live="polite"></div>
 
 <!-- ══ ARENA ══ -->
 <div id="arena"></div>
@@ -358,6 +373,10 @@ let totalSpawned = 0;
 let aliveCount = 0;
 let isNight = false;
 let infoTimeout = null;
+// Each wave gets an id so timers from an older wave (pending spawns, catches
+// still animating) cannot add monsters or points to the new wave.
+let waveId = 0;
+let spawnTimers = [];
 
 const arena = document.getElementById('arena');
 const counterEl = document.getElementById('counter');
@@ -365,10 +384,15 @@ const infoBox = document.getElementById('info-box');
 
 /* ─────────── SPAWN ─────────── */
 function spawnMonster(data, delay) {
-  setTimeout(() => {
+  spawnTimers.push(setTimeout(() => {
     const el = document.createElement('div');
     el.className = 'monster';
     el.textContent = data.emoji;
+    el.dataset.wave = waveId;
+    // Keyboard / screen-reader access: a named, focusable button.
+    el.setAttribute('role', 'button');
+    el.setAttribute('tabindex', '0');
+    el.setAttribute('aria-label', `Πιάσε το δαιμονάκι ${data.emoji}`);
     el.dataset.color = data.color;
     el.dataset.hex   = data.hex;
     el.dataset.num   = data.num;
@@ -383,14 +407,20 @@ function spawnMonster(data, delay) {
 
     el.addEventListener('click',  () => catchMonster(el));
     el.addEventListener('touchend', e => { e.preventDefault(); catchMonster(el); }, {passive:false});
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); catchMonster(el); }
+    });
 
     arena.appendChild(el);
     aliveCount++;
-  }, delay);
+  }, delay));
 }
 
 function spawnWave() {
-  // clear leftover monsters
+  // cancel spawns still pending from the previous wave, then clear leftovers
+  waveId++;
+  spawnTimers.forEach(clearTimeout);
+  spawnTimers = [];
   arena.querySelectorAll('.monster').forEach(m => m.remove());
   caught = 0;
   aliveCount = 0;
@@ -416,12 +446,22 @@ function catchMonster(el) {
   el.classList.add('pop');
 
   // show info
-  showInfo(`Αυτός είναι <span style="color:${hex};font-size:1.2em">■</span> <b style="color:${hex}">${COLORS_GR[color]||color.toUpperCase()}</b> και είναι ο ΑΡΙΘΜΟΣ <b>${NUM_WORDS[num]}</b> 🔢`);
+  // The swatch shows the colour; the word stays in the readable text colour
+  // (several monster colours were below WCAG AA contrast on the background).
+  showInfo(`Αυτός είναι <span class="swatch" aria-hidden="true" style="color:${hex}">■</span> <b>${COLORS_GR[color]||color.toUpperCase()}</b> και είναι ο ΑΡΙΘΜΟΣ <b>${NUM_WORDS[num]}</b> 🔢`);
 
   spawnSparkles(el);
 
+  // keep keyboard focus in the game: move it to another live monster
+  if (document.activeElement === el) {
+    const next = arena.querySelector('.monster:not(.pop)');
+    if (next) next.focus();
+  }
+
+  const wave = el.dataset.wave;
   setTimeout(() => {
     el.remove();
+    if (wave !== String(waveId)) return; // a new wave started meanwhile
     caught++;
     aliveCount--;
     updateCounter();
@@ -471,11 +511,13 @@ function celebrate() {
   playCelebration();
   launchConfetti();
   document.getElementById('celebration').classList.add('show');
+  document.getElementById('play-again-btn').focus();
 }
 
 function playAgain() {
   document.getElementById('celebration').classList.remove('show');
   spawnWave();
+  document.getElementById('wave-btn').focus();
 }
 
 /* ─────────── CONFETTI ─────────── */
@@ -501,8 +543,7 @@ const nightBtn = document.getElementById('night-btn');
 function toggleNight() {
   isNight = !isNight;
   document.body.classList.toggle('night', isNight);
-  nightBtn.textContent = isNight ? '☀️ Μέρα' : '🌙 Νύχτα';
-  buildStars();
+  nightBtn.textContent = isNight ? '☀️ Μέρα' : '🌙 Νύχτα';  buildStars();
 }
 
 function buildStars() {
