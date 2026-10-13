@@ -2,6 +2,9 @@
 <html lang="el">
 <head>
 <meta charset="UTF-8">
+<!-- user-scalable=no ΣΚΟΠΙΜΑ: η Κυβελίτσα είναι 3 χρονών και με δύο δαχτυλάκια
+     κάνει κατά λάθος «τσίμπημα» (pinch) και η σελίδα μεγαλώνει ενώ παίζει.
+     Τα κουμπιά και τα δαιμονάκια είναι ήδη πολύ μεγάλα (τουλάχιστον 96px). -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Κυνήγι Δαιμόνων της Κυβελίτσας!</title>
   <meta name="description" content="Colorful early-learning browser and terminal games for Cybele" />
@@ -12,34 +15,54 @@
   <meta name="twitter:card" content="summary" />
 
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👾</text></svg>">
+<!-- Γραμματοσειρές με ελληνικά, αποθηκευμένες στο site (όχι από τη Google) -->
+<link rel="stylesheet" href="assets/fonts/fonts.css">
 <style>
+  /* ════════════════════════════════════════════════════════════
+     «Βιβλίο με αυτοκόλλητα και κηρομπογιές»
+     Χαρτί για φόντο, χοντρό μαύρο περίγραμμα, καθαρά χρώματα,
+     όλα λίγο στραβά σαν αυτοκόλλητα που κόλλησε ένα παιδάκι.
+     ════════════════════════════════════════════════════════════ */
   :root {
-    --bg: #fff9c4;
-    --bg2: #ffe0f0;
-    --accent: #ff6ec7;
-    --accent2: #a78bfa;
-    --text: #3d2b6b;
-    --monster-glow: none;
+    --paper: #FFF8E7;      /* χαρτί */
+    --ink: #2B2D42;        /* μολύβι / περίγραμμα */
+    --tomato: #FF5A5F;
+    --sunflower: #FFC93C;
+    --grass: #3BB273;
+    --sky: #3A86FF;
+    --plum: #8E6CEF;       /* το χρώμα των δαιμονακιών */
+    --night: #12355B;      /* βαθύ μπλε της νύχτας */
+    --torch: #FFE8A3;      /* ζεστό φως του φακού */
+    --bg: var(--paper);
+    --text: var(--ink);
+    --outline: 4px solid var(--ink);
+    --sticker-shadow: 4px 5px 0 var(--ink);
     --flashlight: none;
+    --font-title: 'Comfortaa', 'Arial Rounded MT Bold', sans-serif;
+    --font-words: 'Didact Gothic', 'Segoe UI', Arial, sans-serif;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    font-family: 'Segoe UI', 'Arial Rounded MT Bold', Arial, sans-serif;
-    background: linear-gradient(135deg, var(--bg) 0%, var(--bg2) 100%);
+    font-family: var(--font-words);
+    color: var(--text);
+    /* χαρτί με πολύ αχνές κουκκίδες, σαν σελίδα από τετράδιο ζωγραφικής */
+    background-color: var(--bg);
+    background-image: radial-gradient(rgba(43,45,66,0.07) 1.5px, transparent 1.6px);
+    background-size: 22px 22px;
     min-height: 100vh;
     overflow-x: hidden;
-    transition: background 0.5s;
+    transition: background-color 0.5s;
     cursor: default;
     user-select: none;
   }
 
   body.night {
-    --bg: #1a1035;
-    --bg2: #0d0820;
-    --text: #f0e6ff;
-    background: radial-gradient(ellipse at center, #2d1b69 0%, #0d0820 100%);
+    --bg: var(--night);
+    --text: var(--paper);
+    background-image: radial-gradient(rgba(255,232,163,0.08) 1.5px, transparent 1.6px);
   }
+  /* ο φακός: ζεστός κύκλος φωτός, σκοτάδι γύρω του */
   body.night::after {
     content: '';
     position: fixed;
@@ -49,117 +72,152 @@
     z-index: 5;
   }
 
+  /* ─── ΑΥΤΟΚΟΛΛΗΤΟ (κοινό στυλ) ─── */
+  .sticker {
+    background: #fff;
+    color: var(--ink);
+    border: var(--outline);
+    border-radius: 22px;
+    box-shadow: var(--sticker-shadow);
+  }
+
   /* ─── HEADER ─── */
   #header {
     text-align: center;
-    padding: 18px 10px 8px;
+    padding: 20px 12px 6px;
     position: relative;
     z-index: 10;
   }
   #title {
-    font-size: clamp(1.6rem, 5vw, 3rem);
-    color: var(--text);
-    text-shadow: 2px 2px 0 #fff, 0 0 20px var(--accent);
-    letter-spacing: 1px;
-    line-height: 1.2;
+    display: inline-block;
+    font-family: var(--font-title);
+    font-weight: 700;
+    font-size: clamp(1.5rem, 4.6vw, 2.7rem);
+    line-height: 1.25;
+    padding: 10px 26px 12px;
+    transform: rotate(-1.5deg);
+    background: var(--sunflower);
   }
-  body.night #title { text-shadow: 2px 2px 0 #2d1b69, 0 0 25px #c084fc; color: #f0e6ff; }
 
   /* ─── TOP BAR ─── */
   #topbar {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 14px;
-    padding: 8px 16px;
+    gap: 18px;
+    padding: 14px 16px 8px;
     flex-wrap: wrap;
     position: relative;
     z-index: 10;
   }
   .pill {
-    background: linear-gradient(135deg, #db2777, #7c3aed);
-    color: #fff;
-    border: none;
-    border-radius: 50px;
+    font-family: var(--font-title);
+    font-weight: 700;
+    color: var(--ink);
+    border: var(--outline);
+    border-radius: 26px;
+    box-shadow: var(--sticker-shadow);
+    min-height: 96px;          /* μεγάλο για μικρά δαχτυλάκια */
+    min-width: 96px;
     padding: 12px 26px;
-    font-size: clamp(1.1rem, 3vw, 1.5rem);
-    font-weight: bold;
+    font-size: clamp(1.1rem, 3vw, 1.45rem);
     cursor: pointer;
-    box-shadow: 0 4px 15px rgba(167,139,250,0.5);
     transition: transform .15s, box-shadow .15s;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
-  .pill:active { transform: scale(0.93); box-shadow: 0 2px 8px rgba(167,139,250,0.4); }
+  .pill:active { transform: translate(3px, 4px); box-shadow: 1px 1px 0 var(--ink); }
   .pill:focus-visible, .monster:focus-visible {
-    outline: 4px solid var(--text);
-    outline-offset: 4px;
+    outline: 5px dashed var(--sky);
+    outline-offset: 5px;
   }
-  .monster:focus-visible { border-radius: 16px; }
+  body.night .pill:focus-visible, body.night .monster:focus-visible { outline-color: var(--torch); }
+  #night-btn { background: var(--sunflower); transform: rotate(-2deg); }
+  #wave-btn  { background: var(--grass); transform: rotate(2deg); }
+  #night-btn:active { transform: rotate(-2deg) translate(3px, 4px); }
+  #wave-btn:active  { transform: rotate(2deg) translate(3px, 4px); }
+
   #counter {
-    font-size: clamp(1.3rem, 4vw, 2rem);
-    color: var(--text);
-    background: rgba(255,255,255,0.6);
-    border-radius: 50px;
-    padding: 10px 22px;
-    font-weight: bold;
-    backdrop-filter: blur(4px);
+    font-family: var(--font-words);
+    font-size: clamp(1.35rem, 4vw, 2rem);
+    padding: 10px 24px 22px;
+    transform: rotate(1deg);
+    /* «μουτζούρα» με κηρομπογιά κάτω από το κείμενο */
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='14' viewBox='0 0 60 14'%3E%3Cpath d='M2 8 C 10 1, 18 13, 30 7 S 50 2, 58 8' fill='none' stroke='%23FF5A5F' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: repeat-x;
+    background-position: 0 calc(100% - 6px);
+    background-size: 60px 14px;
   }
-  body.night #counter { background: rgba(45,27,105,0.7); color: #e9d5ff; }
 
   /* ─── COLOR/NUMBER INFO ─── */
-  #info-box {
+  #info-wrap {
     text-align: center;
-    min-height: 44px;
-    font-size: clamp(1.1rem, 3.5vw, 1.7rem);
-    color: var(--text);
-    font-weight: bold;
-    padding: 4px 16px;
+    min-height: 64px;
+    padding: 6px 16px;
     position: relative;
     z-index: 10;
-    transition: opacity .3s;
   }
-  body.night #info-box { color: #e9d5ff; }
-  /* outline so light swatches (e.g. white) stay visible on the light background */
-  #info-box .swatch { font-size: 1.2em; text-shadow: 0 0 2px #3d2b6b; }
+  #info-box {
+    display: inline-block;
+    font-size: clamp(1.15rem, 3.5vw, 1.7rem);
+    padding: 8px 20px;
+    transform: rotate(-1deg);
+  }
+  #info-box:empty { visibility: hidden; }
+  #info-box b { font-size: 1.15em; letter-spacing: 1px; }
+  /* το χρωματιστό τετραγωνάκι, με περίγραμμα για να φαίνεται και το άσπρο */
+  #info-box .swatch {
+    display: inline-block;
+    width: 1.1em;
+    height: 1.1em;
+    vertical-align: -0.15em;
+    border: 3px solid var(--ink);
+    border-radius: 6px;
+  }
 
   /* ─── GAME ARENA ─── */
   #arena {
     position: relative;
     width: 100%;
-    height: calc(100vh - 280px);
-    min-height: 320px;
+    height: calc(100vh - 330px);
+    min-height: 340px;
     overflow: hidden;
   }
 
-  /* ─── MONSTERS ─── */
+  /* ─── MONSTERS: κάθε δαιμονάκι είναι στρογγυλό αυτοκόλλητο ─── */
   .monster {
+    --tilt: 0deg;
     position: absolute;
-    font-size: clamp(52px, 10vw, 90px);
-    cursor: pointer;
+    width: clamp(96px, 13vw, 118px);
+    height: clamp(96px, 13vw, 118px);
+    display: grid;
+    place-items: center;
+    font-size: clamp(54px, 8vw, 70px);
     line-height: 1;
-    transition: transform .2s;
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+    background: #fff;
+    border: var(--outline);
+    border-radius: 50%;
+    box-shadow: var(--sticker-shadow);
+    cursor: pointer;
+    transform: rotate(var(--tilt));
     animation: floaty 3s ease-in-out infinite;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
     z-index: 6;
   }
-  body.night .monster {
-    filter: drop-shadow(0 0 14px #c084fc) drop-shadow(0 0 28px #818cf8);
-  }
-  .monster:hover { transform: scale(1.15) rotate(-8deg); }
-  .monster:active { transform: scale(0.85); }
+  body.night .monster { background: var(--torch); }
+  .monster:active { transform: scale(0.88) rotate(var(--tilt)); }
   @keyframes floaty {
-    0%,100% { transform: translateY(0) rotate(-3deg); }
-    50%      { transform: translateY(-14px) rotate(3deg); }
+    0%,100% { transform: translateY(0) rotate(calc(var(--tilt) - 3deg)); }
+    50%      { transform: translateY(-12px) rotate(calc(var(--tilt) + 3deg)); }
   }
   .monster.pop {
     animation: pop-out .5s forwards;
   }
   @keyframes pop-out {
-    0%   { transform: scale(1); opacity: 1; }
-    40%  { transform: scale(1.6) rotate(20deg); opacity: 0.8; }
+    0%   { transform: scale(1) rotate(var(--tilt)); opacity: 1; }
+    40%  { transform: scale(1.4) rotate(20deg); opacity: 0.9; }
     100% { transform: scale(0) rotate(-30deg); opacity: 0; }
   }
 
@@ -176,45 +234,114 @@
     100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
   }
 
+  /* ─── ΤΟ ΒΙΒΛΙΟ ΜΕ ΤΑ ΑΥΤΟΚΟΛΛΗΤΑ ─── */
+  #book {
+    position: relative;
+    z-index: 10;
+    max-width: 760px;
+    margin: 18px auto 40px;
+    padding: 18px 18px 22px;
+    background: #fff;
+  }
+  #book h2 {
+    font-family: var(--font-title);
+    font-weight: 700;
+    font-size: clamp(1.2rem, 3.6vw, 1.7rem);
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  #book-count {
+    text-align: center;
+    font-size: clamp(1.1rem, 3.2vw, 1.4rem);
+    margin-bottom: 14px;
+  }
+  #book-count b { font-size: 1.3em; color: var(--ink); }
+  #sticker-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 8px;
+    list-style: none;
+  }
+  .slot {
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    border: 3px dashed #B9BBC9;
+    border-radius: 12px;
+    font-size: clamp(1.1rem, 4vw, 2rem);
+    color: #6B6E85;
+    font-family: var(--font-words);
+  }
+  /* κάθε 5ο κουτάκι λίγο πιο σκούρο: βοηθάει στο μέτρημα ανά 5 */
+  .slot:nth-child(5n) { border-color: #8E90A6; }
+  .slot.full {
+    border: 3px solid var(--ink);
+    background: var(--paper);
+    transform: rotate(var(--tilt, 0deg));
+    box-shadow: 2px 3px 0 var(--ink);
+  }
+  .slot.new { animation: stick-on .5s ease-out; }
+  @keyframes stick-on {
+    0%   { transform: scale(1.8) rotate(-20deg); opacity: 0; }
+    100% { transform: scale(1) rotate(var(--tilt, 0deg)); opacity: 1; }
+  }
+  #book-actions { text-align: center; margin-top: 16px; }
+  /* το κουμπί για τους μεγάλους: μικρό και ήσυχο */
+  #clear-book {
+    font-family: var(--font-words);
+    font-size: 1rem;
+    color: var(--ink);
+    background: #fff;
+    border: 2px solid var(--ink);
+    border-radius: 12px;
+    padding: 8px 14px;
+    cursor: pointer;
+  }
+  #clear-book:focus-visible { outline: 4px dashed var(--sky); outline-offset: 3px; }
+
   /* ─── CELEBRATION ─── */
   #celebration {
     display: none;
     position: fixed;
     inset: 0;
-    background: linear-gradient(135deg, #ffd6ec 0%, #d8b4fe 50%, #fef08a 100%);
+    background-color: var(--paper);
+    background-image: radial-gradient(rgba(43,45,66,0.08) 1.5px, transparent 1.6px);
+    background-size: 22px 22px;
     z-index: 100;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
     padding: 20px;
+    gap: 22px;
     animation: cele-in .5s ease-out;
   }
-  body.night #celebration { background: linear-gradient(135deg, #2e1065 0%, #1e1b4b 50%, #0f172a 100%); }
+  body.night #celebration { background-color: var(--night); }
   @keyframes cele-in { from { opacity:0; transform: scale(.8); } to { opacity:1; transform: scale(1); } }
   #celebration.show { display: flex; }
   #cele-text {
-    font-size: clamp(2rem, 6vw, 4rem);
-    font-weight: bold;
-    color: #6d28d9;
-    text-shadow: 3px 3px 0 #fff, 0 0 30px #fbbf24;
+    font-family: var(--font-title);
+    font-weight: 700;
+    font-size: clamp(2rem, 6vw, 3.6rem);
     line-height: 1.3;
-    margin-bottom: 20px;
+    padding: 14px 30px;
+    background: var(--sunflower);
+    transform: rotate(-2deg);
   }
-  body.night #cele-text { color: #e9d5ff; text-shadow: 3px 3px 0 #2e1065, 0 0 30px #c084fc; }
   #cele-sub {
-    font-size: clamp(1.2rem, 3.5vw, 2rem);
-    color: #5b21b6;
-    margin-bottom: 30px;
+    font-size: clamp(1.25rem, 3.5vw, 2rem);
+    padding: 12px 26px;
+    transform: rotate(1.5deg);
   }
-  body.night #cele-sub { color: #c4b5fd; }
+  #play-again-btn { background: var(--grass); }
 
   /* ─── CONFETTI ─── */
   .confetti-piece {
     position: fixed;
-    width: 12px;
-    height: 16px;
-    border-radius: 3px;
+    width: 14px;
+    height: 18px;
+    border: 2px solid var(--ink);
+    border-radius: 4px;
     top: -20px;
     animation: confetti-fall linear forwards;
     z-index: 101;
@@ -225,13 +352,6 @@
     80%  { opacity: 1; }
     100% { transform: translateY(110vh) rotate(720deg) translateX(var(--cx)); opacity: 0; }
   }
-
-  /* ─── NIGHT TOGGLE ─── */
-  #night-btn {
-    background: linear-gradient(135deg, #c2410c, #b45309);
-    color: #fff;
-  }
-  body.night #night-btn { background: linear-gradient(135deg, #6d28d9, #2563eb); }
 
   /* ─── FLOATING STARS (night mode) ─── */
   .star-bg {
@@ -249,15 +369,24 @@
 
   /* ─── RESPONSIVE ─── */
   @media (max-width: 480px) {
-    .pill { padding: 10px 18px; }
+    .pill { padding: 10px 16px; }
+    #topbar { gap: 12px; }
+    #counter { order: -1; width: 100%; text-align: center; }
+    #sticker-grid { gap: 5px; }
+    .slot { border-width: 2px; border-radius: 8px; }
   }
 
   /* ─── REDUCED MOTION ─── */
+  /* Για όποιον ζαλίζεται: τίποτα δεν πετάει ή χοροπηδάει.
+     Το παιχνίδι παίζεται κανονικά, απλώς χωρίς κινήσεις. */
   @media (prefers-reduced-motion: reduce) {
-    .monster, .star-bg, #celebration { animation: none; }
+    *, *::before, *::after {
+      animation: none !important;
+      transition: none !important;
+    }
     .star-bg { opacity: .6; }
     .confetti-piece, .sparkle { display: none; }
-    .monster.pop { animation: none; opacity: 0; }
+    .monster.pop { opacity: 0; }
   }
 </style>
 </head>
@@ -268,31 +397,49 @@
 
 <!-- ══ CELEBRATION SCREEN ══ -->
 <div id="celebration" role="dialog" aria-modal="true" aria-labelledby="cele-text">
-  <div id="cele-text">ΜΠΡΑΒΟ ΚΥΒΕΛΙΤΣΑ!<br>🌟💜🎉</div>
-  <div id="cele-sub">Είσαι η καλύτερη<br>Κυνηγός Δαιμόνων!<br>💪🌟</div>
+  <div id="cele-text" class="sticker">ΜΠΡΑΒΟ ΚΥΒΕΛΙΤΣΑ!<br>🌟💜🎉</div>
+  <div id="cele-sub" class="sticker">Είσαι η καλύτερη<br>Κυνηγός Δαιμόνων!<br>💪🌟</div>
   <button class="pill" id="play-again-btn" onclick="playAgain()">🔄 Παίξε Ξανά!</button>
 </div>
 
 <!-- ══ HEADER ══ -->
 <div id="header">
-  <div id="title" role="heading" aria-level="1">👾 Κυνήγι Δαιμόνων<br>της Κυβελίτσας! 👾</div>
+  <h1 id="title" class="sticker">👾 Κυνήγι Δαιμόνων<br>της Κυβελίτσας! 👾</h1>
 </div>
 
 <!-- ══ TOP BAR ══ -->
 <div id="topbar">
   <button class="pill" id="night-btn" onclick="toggleNight()">🌙 Νύχτα</button>
-  <div id="counter" aria-live="polite">Έπιασες 0 δαιμονάκια! 🎉</div>
+  <div id="counter" class="sticker" aria-live="polite">Έπιασες 0 δαιμονάκια! 🎉</div>
   <button class="pill" id="wave-btn" onclick="spawnWave()">🎮 Νέο Κύμα!</button>
 </div>
 
 <!-- ══ INFO BOX ══ -->
-<div id="info-box" aria-live="polite"></div>
+<div id="info-wrap"><div id="info-box" class="sticker" aria-live="polite"></div></div>
 
 <!-- ══ ARENA ══ -->
 <div id="arena"></div>
 
+<!-- ══ ΤΟ ΒΙΒΛΙΟ ΜΕ ΤΑ ΑΥΤΟΚΟΛΛΗΤΑ ══
+     Κάθε δαιμονάκι που πιάνεις κολλάει εδώ. Μένουν και για την επόμενη φορά!
+     10 κουτάκια σε κάθε σειρά, για να μετράμε μαζί. -->
+<section id="book" class="sticker" aria-labelledby="book-title">
+  <h2 id="book-title">📒 Το βιβλίο μου με τα αυτοκόλλητα</h2>
+  <p id="book-count" aria-live="polite"></p>
+  <ol id="sticker-grid" aria-label="Αυτοκόλλητα"></ol>
+  <div id="book-actions">
+    <button id="clear-book" type="button">🧽 Άδειασμα βιβλίου (για μεγάλους)</button>
+  </div>
+</section>
+
+<script src="assets/storage.js"></script>
 <script>
 'use strict';
+
+/* ─────────── ΚΙΝΗΣΕΙΣ ─────────── */
+// Αν ο υπολογιστής ζητάει «λιγότερες κινήσεις», δεν πετάμε κομφετί
+// και σπίθες. Το παιχνίδι μένει ίδιο.
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 /* ─────────── AUDIO ─────────── */
 // Created lazily on the first tap (browsers block audio before a gesture).
@@ -349,7 +496,7 @@ function playCelebration() {
 const MONSTERS = [
   { emoji:'👾', color:'μωβ',     hex:'#a855f7', num:1 },
   { emoji:'👹', color:'κόκκινος', hex:'#ef4444', num:2 },
-  { emoji:'👻', color:'άσπρος',  hex:'#e0e7ff', num:3 },
+  { emoji:'👻', color:'άσπρος',  hex:'#ffffff', num:3 },
   { emoji:'🐉', color:'πράσινος',hex:'#22c55e', num:4 },
   { emoji:'🦄', color:'ροζ',     hex:'#ec4899', num:5 },
   { emoji:'🐙', color:'μπλε',    hex:'#3b82f6', num:1 },
@@ -382,6 +529,11 @@ const arena = document.getElementById('arena');
 const counterEl = document.getElementById('counter');
 const infoBox = document.getElementById('info-box');
 
+// Μια μικρή τυχαία κλίση, για να μοιάζει με αυτοκόλλητο που κόλλησε στραβά.
+function randomTilt() {
+  return (Math.random() * 12 - 6).toFixed(1) + 'deg';
+}
+
 /* ─────────── SPAWN ─────────── */
 function spawnMonster(data, delay) {
   spawnTimers.push(setTimeout(() => {
@@ -396,14 +548,27 @@ function spawnMonster(data, delay) {
     el.dataset.color = data.color;
     el.dataset.hex   = data.hex;
     el.dataset.num   = data.num;
+    el.style.setProperty('--tilt', randomTilt());
     el.style.animationDelay = (Math.random() * 2) + 's';
     el.style.animationDuration = (2.5 + Math.random() * 2) + 's';
 
-    // random position (keep within arena bounds)
-    const maxX = Math.max(10, arena.offsetWidth - 100);
-    const maxY = Math.max(10, arena.offsetHeight - 110);
-    el.style.left = (10 + Math.random() * maxX) + 'px';
-    el.style.top  = (10 + Math.random() * maxY) + 'px';
+    // random position (keep within arena bounds; a sticker is up to ~125px).
+    // Δοκιμάζουμε μερικές θέσεις και κρατάμε αυτή που απέχει περισσότερο
+    // από τα άλλα δαιμονάκια, για να μην κάθονται το ένα πάνω στο άλλο.
+    const maxX = Math.max(10, arena.offsetWidth - 135);
+    const maxY = Math.max(10, arena.offsetHeight - 135);
+    const others = [...arena.querySelectorAll('.monster:not(.pop)')]
+      .map(m => [parseFloat(m.style.left), parseFloat(m.style.top)]);
+    let best = null, bestGap = -1;
+    for (let t = 0; t < 15; t++) {
+      const x = 10 + Math.random() * maxX;
+      const y = 10 + Math.random() * maxY;
+      const gap = others.reduce((g, [ox, oy]) => Math.min(g, Math.hypot(ox - x, oy - y)), Infinity);
+      if (gap > bestGap) { best = [x, y]; bestGap = gap; }
+      if (gap > 130) break; // far enough: no overlap
+    }
+    el.style.left = best[0] + 'px';
+    el.style.top  = best[1] + 'px';
 
     el.addEventListener('click',  () => catchMonster(el));
     el.addEventListener('touchend', e => { e.preventDefault(); catchMonster(el); }, {passive:false});
@@ -425,7 +590,7 @@ function spawnWave() {
   caught = 0;
   aliveCount = 0;
   updateCounter();
-  showInfo('');
+  showInfo(null);
 
   const count = 6 + Math.floor(Math.random() * 5); // 6-10 monsters
   totalSpawned = count;
@@ -445,10 +610,16 @@ function catchMonster(el) {
   playPop(400 + Math.random() * 400, ['sine','triangle','square'][Math.floor(Math.random()*3)]);
   el.classList.add('pop');
 
-  // show info
-  // The swatch shows the colour; the word stays in the readable text colour
-  // (several monster colours were below WCAG AA contrast on the background).
-  showInfo(`Αυτός είναι <span class="swatch" aria-hidden="true" style="color:${hex}">■</span> <b>${COLORS_GR[color]||color.toUpperCase()}</b> και είναι ο ΑΡΙΘΜΟΣ <b>${NUM_WORDS[num]}</b> 🔢`);
+  // show info: the swatch shows the colour; the word stays in the readable ink colour
+  showInfo({
+    hex: hex,
+    colorWord: COLORS_GR[color] || color.toUpperCase(),
+    numWord: NUM_WORDS[num],
+  });
+
+  // Κόλλησε το δαιμονάκι στο βιβλίο με τα αυτοκόλλητα!
+  CybeleStorage.addSticker(el.textContent);
+  renderBook(true);
 
   spawnSparkles(el);
 
@@ -473,6 +644,7 @@ function catchMonster(el) {
 
 /* ─────────── SPARKLES ─────────── */
 function spawnSparkles(el) {
+  if (reduceMotion.matches) return; // χωρίς πετούμενες σπίθες
   const rect = el.getBoundingClientRect();
   const arenaRect = arena.getBoundingClientRect();
   const cx = rect.left - arenaRect.left + rect.width / 2;
@@ -500,11 +672,74 @@ function updateCounter() {
 }
 
 /* ─────────── INFO BOX ─────────── */
-function showInfo(html) {
-  clearTimeout(infoTimeout);
-  infoBox.innerHTML = html;
-  if (html) infoTimeout = setTimeout(() => { infoBox.innerHTML = ''; }, 3500);
+// Φτιάχνουμε το μήνυμα κομμάτι-κομμάτι (createElement + textContent),
+// όχι με HTML μέσα σε κείμενο. Έτσι είναι πάντα ασφαλές.
+function bold(text) {
+  const b = document.createElement('b');
+  b.textContent = text;
+  return b;
 }
+
+function showInfo(info) {
+  clearTimeout(infoTimeout);
+  if (!info) { infoBox.replaceChildren(); return; }
+
+  const swatch = document.createElement('span');
+  swatch.className = 'swatch';
+  swatch.setAttribute('aria-hidden', 'true');
+  swatch.style.backgroundColor = info.hex;
+
+  infoBox.replaceChildren(
+    'Αυτός είναι ', swatch, ' ', bold(info.colorWord),
+    ' και είναι ο ΑΡΙΘΜΟΣ ', bold(info.numWord), ' 🔢'
+  );
+  infoTimeout = setTimeout(() => { infoBox.replaceChildren(); }, 3500);
+}
+
+/* ─────────── ΤΟ ΒΙΒΛΙΟ ΜΕ ΤΑ ΑΥΤΟΚΟΛΛΗΤΑ ─────────── */
+const grid = document.getElementById('sticker-grid');
+const bookCount = document.getElementById('book-count');
+
+// Ζωγραφίζει το βιβλίο: γεμάτα κουτάκια με δαιμονάκια, άδεια με τον αριθμό τους.
+// Με justAdded=true, το τελευταίο αυτοκόλλητο «κολλάει» με ένα μικρό εφέ.
+function renderBook(justAdded) {
+  const stickers = CybeleStorage.getStickers();
+  const slots = [];
+  for (let i = 0; i < CybeleStorage.MAX_STICKERS; i++) {
+    const li = document.createElement('li');
+    li.className = 'slot';
+    if (i < stickers.length) {
+      li.classList.add('full');
+      li.textContent = stickers[i];
+      // ίδια κλίση κάθε φορά για το ίδιο κουτάκι, για να μη «χορεύουν»
+      li.style.setProperty('--tilt', ((i * 37) % 11 - 5) + 'deg');
+      if (justAdded && i === stickers.length - 1) li.classList.add('new');
+    } else {
+      li.textContent = String(i + 1); // το νούμερο του άδειου κουτιού
+      li.setAttribute('aria-hidden', 'true');
+    }
+    slots.push(li);
+  }
+  grid.replaceChildren(...slots);
+
+  const n = stickers.length;
+  bookCount.replaceChildren();
+  if (n === 0) {
+    bookCount.textContent = 'Πιάσε ένα δαιμονάκι για να κολλήσεις το πρώτο σου αυτοκόλλητο!';
+  } else if (n >= CybeleStorage.MAX_STICKERS) {
+    bookCount.append('Γέμισε το βιβλίο! ', bold(String(n)), ' αυτοκόλλητα! 🏆');
+  } else {
+    bookCount.append('Έχεις ', bold(String(n)), n === 1 ? ' αυτοκόλλητο!' : ' αυτοκόλλητα!');
+  }
+}
+
+// Το κουμπί για τους μεγάλους: ρωτάει πρώτα, για να μην αδειάσει κατά λάθος.
+document.getElementById('clear-book').addEventListener('click', () => {
+  if (window.confirm('Να αδειάσει το βιβλίο με τα αυτοκόλλητα;')) {
+    CybeleStorage.clearStickers();
+    renderBook(false);
+  }
+});
 
 /* ─────────── CELEBRATE ─────────── */
 function celebrate() {
@@ -522,7 +757,8 @@ function playAgain() {
 
 /* ─────────── CONFETTI ─────────── */
 function launchConfetti() {
-  const colors = ['#ff6ec7','#a78bfa','#fbbf24','#34d399','#60a5fa','#f87171','#fff'];
+  if (reduceMotion.matches) return; // χωρίς κομφετί όταν ζητάμε λιγότερες κινήσεις
+  const colors = ['#FF5A5F','#FFC93C','#3BB273','#3A86FF','#8E6CEF','#FFF8E7'];
   for (let i = 0; i < 80; i++) {
     const c = document.createElement('div');
     c.className = 'confetti-piece';
@@ -543,12 +779,13 @@ const nightBtn = document.getElementById('night-btn');
 function toggleNight() {
   isNight = !isNight;
   document.body.classList.toggle('night', isNight);
-  nightBtn.textContent = isNight ? '☀️ Μέρα' : '🌙 Νύχτα';  buildStars();
+  nightBtn.textContent = isNight ? '☀️ Μέρα' : '🌙 Νύχτα';
+  buildStars();
 }
 
 function buildStars() {
   const layer = document.getElementById('stars-layer');
-  layer.innerHTML = '';
+  layer.replaceChildren();
   if (!isNight) return;
   for (let i = 0; i < 40; i++) {
     const s = document.createElement('div');
@@ -563,6 +800,7 @@ function buildStars() {
 }
 
 /* ─────────── FLASHLIGHT (night) ─────────── */
+// Ένας ζεστός κύκλος φωτός ακολουθεί το δάχτυλο (ή το ποντίκι).
 // Throttled to one style update per animation frame.
 let flashPos = null;
 let flashQueued = false;
@@ -575,8 +813,8 @@ function updateFlashlight(x, y) {
     flashQueued = false;
     const [fx, fy] = flashPos;
     document.body.style.setProperty('--flashlight',
-      `radial-gradient(circle 160px at ${fx}px ${fy}px,
-        transparent 0%, transparent 60%, rgba(0,0,0,0.88) 100%)`);
+      `radial-gradient(circle 170px at ${fx}px ${fy}px,
+        rgba(255,232,163,0.28) 0%, rgba(255,232,163,0.10) 55%, rgba(6,20,38,0.86) 100%)`);
   });
 }
 
@@ -587,6 +825,7 @@ document.addEventListener('touchmove', e => {
 }, {passive:true});
 
 /* ─────────── INIT ─────────── */
+renderBook(false);
 spawnWave();
 </script>
 </body>
