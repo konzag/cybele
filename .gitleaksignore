@@ -1,0 +1,4 @@
+# gitleaks false positives (fingerprint = commit:file:rule:line). Review each entry; never list a real secret.
+# 'cybele.stickers.v1' is a localStorage key name (branch feat/wave4-identity, PR #3), not a credential.
+# If PR #3 is rebased its commit changes: put `// gitleaks:allow` on that line instead.
+766aa1a208707d93ffe4bc19ac3e1dc9ba564a1c:assets/storage.js:generic-api-key:21
