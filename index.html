@@ -271,7 +271,7 @@
 <div id="celebration" role="dialog" aria-modal="true" aria-labelledby="cele-text">
   <div id="cele-text">ΜΠΡΑΒΟ ΚΥΒΕΛΙΤΣΑ!<br>🌟💜🎉</div>
   <div id="cele-sub">Είσαι η καλύτερη<br>Κυνηγός Δαιμόνων!<br>💪🌟</div>
-  <button class="pill" id="play-again-btn" onclick="playAgain()">🔄 Παίξε Ξανά!</button>
+  <button class="pill" id="play-again-btn">🔄 Παίξε Ξανά!</button>
 </div>
 
 <!-- ══ HEADER ══ -->
@@ -281,9 +281,9 @@
 
 <!-- ══ TOP BAR ══ -->
 <div id="topbar">
-  <button class="pill" id="night-btn" onclick="toggleNight()">🌙 Νύχτα</button>
+  <button class="pill" id="night-btn">🌙 Νύχτα</button>
   <div id="counter" aria-live="polite">Έπιασες 0 δαιμονάκια! 🎉</div>
-  <button class="pill" id="wave-btn" onclick="spawnWave()">🎮 Νέο Κύμα!</button>
+  <button class="pill" id="wave-btn">🎮 Νέο Κύμα!</button>
 </div>
 
 <!-- ══ INFO BOX ══ -->
@@ -586,6 +586,13 @@ document.addEventListener('touchmove', e => {
   const t = e.touches[0];
   updateFlashlight(t.clientX, t.clientY);
 }, {passive:true});
+
+/* ─────────── BUTTONS ───────────
+   The games hub serves this page with a strict Content-Security-Policy, so the buttons get their
+   click handlers here (addEventListener) instead of inline onclick attributes. Same functions as before. */
+document.getElementById('play-again-btn').addEventListener('click', () => playAgain());
+document.getElementById('night-btn').addEventListener('click', () => toggleNight());
+document.getElementById('wave-btn').addEventListener('click', () => spawnWave());
 
 /* ─────────── INIT ─────────── */
 spawnWave();
