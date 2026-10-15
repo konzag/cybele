@@ -1,6 +1,6 @@
 # 🌟 Το Πρόγραμμα της Κυβελίτσας 🌟
 
-**Άνοιγμα online:** [https://konzag.github.io/cybele/](https://konzag.github.io/cybele/)
+**Άνοιγμα online:** [https://public.tailc01d70.ts.net/cybele/](https://public.tailc01d70.ts.net/cybele/) (από το «Τα Παιχνίδια μας», το hub με όλα τα παιχνίδια του σπιτιού· το GitHub Pages έκλεισε)
 
 **Python setup:**
 ```bash
