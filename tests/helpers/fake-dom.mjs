@@ -37,12 +37,14 @@ class FakeElement {
     this.attributes = { ...attrs };
     this.id = attrs.id || '';
     this.className = attrs.class || '';
-    this.dataset = {};
+    // Like the browser's DOMStringMap: every value is stored as a string (el.dataset.wave = 3 -> '3').
+    this.dataset = new Proxy({}, { set(t, k, v) { t[k] = String(v); return true; } });
     for (const [k, v] of Object.entries(attrs)) {
       if (k.startsWith('data-')) this.dataset[k.slice(5).replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = v;
     }
     this.style = { setProperty(k, v) { this[k] = v; }, removeProperty(k) { delete this[k]; }, getPropertyValue(k) { return this[k] ?? ''; } };
     this.listeners = {};
+    this.parent = null;
     this.children = [];
     this.textContent = '';
     this._html = '';
@@ -71,8 +73,8 @@ class FakeElement {
   hasAttribute(k) { return k in this.attributes; }
   addEventListener(type, fn) { (this.listeners[type] ||= []).push(fn); }
   removeEventListener(type, fn) { this.listeners[type] = (this.listeners[type] || []).filter((f) => f !== fn); }
-  appendChild(child) { this.children.push(child); return child; }
-  append(...c) { this.children.push(...c); }
+  appendChild(child) { child.parent = this; this.children.push(child); return child; }
+  append(...c) { for (const x of c) this.appendChild(x); }
   // Fire an event on this element, like a real tap/click would (this === element, one event argument).
   dispatch(type, extra = {}) {
     const event = { type, target: this, currentTarget: this, preventDefault() {}, stopPropagation() {}, ...extra };
@@ -80,16 +82,18 @@ class FakeElement {
     return event;
   }
   click() { if (!this.disabled) this.dispatch('click'); }
+  // el.remove(): the element leaves its parent (and the page), like in a browser.
+  remove() { if (this.parent) this.parent.children = this.parent.children.filter((c) => c !== this.self); this.removed = true; }
 }
 
 // Unknown properties/methods of an element fall back to the stub (e.g. el.getContext('2d'), el.focus()).
 function wrap(el) {
-  return new Proxy(el, {
+  return (el.self = new Proxy(el, {
     get(target, prop, receiver) {
       if (prop in target) return Reflect.get(target, prop, receiver);
       return stub;
     },
-  });
+  }));
 }
 
 function matches(el, selector) {
