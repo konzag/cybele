@@ -33,7 +33,7 @@ for (const mode of ['day', 'night'] as const) {
 // WCAG 2.x A/AA rules at every impact (axe rates some AA failures only «moderate», so the gate above misses them).
 // Accepted exception, exactly one: axe `meta-viewport` on the viewport <meta> (`user-scalable=no`, WCAG 1.4.4).
 // OWNER DECISION 10 (2026-10-22, D:\Git\.claude\HANDOFF.md «OWNER DECISIONS»): it stays on purpose, so a
-// 3-year-old's small hands do not zoom the page by accident while tapping fast. README «Γνωστοί περιορισμοί».
+// small child's hands do not zoom the page by accident while tapping fast. README «Γνωστοί περιορισμοί».
 // Every other rule, and meta-viewport on any other node, still fails this test.
 const ACCEPTED_RULE = 'meta-viewport';
 const ACCEPTED_TARGET = 'meta[name="viewport"]';
