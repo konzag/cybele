@@ -4,29 +4,27 @@
 // D:\Git\.claude\FIX-CYBELE-TESTBUGS-2026-10-22.md.
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { monsterLayout, openGame, seedRandom } from './helpers';
+import { monsterLayout, openGame } from './helpers';
 
-// The wave is seeded (helpers.ts seedRandom): the game places monsters at random and they often land on top of each
-// other (measured on 300 waves: axe target-size on 142 at 360 px, on 38 at 1280 px), which made this file fail at random
-// on CI. SEED gives a wave with no overlap at 360 and 1280 px; the test below fails first if a change to index.html
-// makes that untrue, so pick another seed then. The overlap itself is the kids' code (GAME-STANDARD §9), not fixed here.
-const SEED = 7;
+// No seed (2026-11-16): index.html keeps monsters apart now (spacing.spec.ts: 300 seeded waves per width), so every
+// test here runs on a real random wave. Until then the game placed them at random, they often landed on top of each
+// other (axe target-size on 142/300 waves at 360 px, 38/300 at 1280 px) and the axe tests had to use a fixed seed.
+const LOADS = 10;
 
-test('seeded wave: the same layout on every load, no monster on top of another (360, 1280)', async ({ page, browser }) => {
+test(`${LOADS} unseeded loads at 360 and 1280: no monster on top of another, axe target-size clean`, async ({ page }) => {
+  const bad: string[] = [];
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   for (const width of [360, 1280]) {
-    const layouts = [];
-    for (let i = 0; i < 2; i++) {
-      const p = i === 0 ? page : await browser.newPage();
-      await p.setViewportSize({ width, height: 800 });
-      await p.emulateMedia({ reducedMotion: 'reduce' });
-      await seedRandom(p, SEED);
-      await openGame(p);
-      layouts.push(await monsterLayout(p));
-      if (p !== page) await p.close();
+    await page.setViewportSize({ width, height: 800 });
+    for (let i = 0; i < LOADS; i++) {
+      await openGame(page); // a fresh page load, so a fresh random wave
+      const { overlaps } = await monsterLayout(page);
+      if (overlaps.length) bad.push(`${width} load ${i}: overlap ${JSON.stringify(overlaps)}`);
+      const { violations } = await new AxeBuilder({ page }).withRules(['target-size']).analyze();
+      for (const v of violations) bad.push(`${width} load ${i}: ${v.id} ${v.nodes.map((n) => n.target.join(' ')).join(' | ')}`);
     }
-    expect(layouts[1].boxes, `same wave on a second load (${width})`).toEqual(layouts[0].boxes);
-    expect(layouts[0].overlaps, `SEED ${SEED} at ${width}: no overlapping monsters (pick another seed)`).toEqual([]);
   }
+  expect(bad).toEqual([]);
 });
 
 // [mode, width] -> known app bug (the test must fail until the fix run removes the entry).
@@ -39,7 +37,6 @@ for (const mode of ['day', 'night'] as const) {
       if (KNOWN[id]) test.fail(true, KNOWN[id]);
       await page.setViewportSize({ width, height: 800 });
       await page.emulateMedia({ reducedMotion: 'reduce' });
-      await seedRandom(page, SEED);
       await openGame(page);
       if (mode === 'night') {
         await page.locator('#night-btn').click();
@@ -64,7 +61,6 @@ const ACCEPTED_TARGET = 'meta[name="viewport"]';
 
 test('axe WCAG 2 A/AA, any impact = 0 (except owner-accepted meta-viewport): day 1280', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await seedRandom(page, SEED);
   await openGame(page);
   const { violations } = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
