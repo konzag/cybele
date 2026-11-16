@@ -400,12 +400,6 @@ function spawnMonster(data, delay) {
     el.style.animationDelay = (Math.random() * 2) + 's';
     el.style.animationDuration = (2.5 + Math.random() * 2) + 's';
 
-    // random position (keep within arena bounds)
-    const maxX = Math.max(10, arena.offsetWidth - 100);
-    const maxY = Math.max(10, arena.offsetHeight - 110);
-    el.style.left = (10 + Math.random() * maxX) + 'px';
-    el.style.top  = (10 + Math.random() * maxY) + 'px';
-
     el.addEventListener('click',  () => catchMonster(el));
     el.addEventListener('touchend', e => { e.preventDefault(); catchMonster(el); }, {passive:false});
     el.addEventListener('keydown', e => {
@@ -413,9 +407,77 @@ function spawnMonster(data, delay) {
     });
 
     arena.appendChild(el);
+    placeMonster(el, liveMonsters().filter(m => m !== el).map(boxOf));
     aliveCount++;
   }, delay));
 }
+
+/* ─────────── PLACE ─────────── */
+// Monsters never land on top of each other (owner 16/11), so a small child can tap every one.
+// GAP leaves room for the float animation (14 px up) and the hover zoom between two monsters.
+const GAP = 16;
+const PLACE_TRIES = 200;
+
+function liveMonsters() {
+  return [...arena.querySelectorAll('.monster')].filter(m => !m.classList.contains('pop'));
+}
+function boxOf(el) {
+  return { x: el.offsetLeft, y: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight };
+}
+// How much a w×h box at (x, y) overlaps the other boxes, the gap included (0 = free spot).
+function clash(x, y, w, h, others, gap = GAP) {
+  let area = 0;
+  for (const o of others) {
+    const dx = Math.min(x + w, o.x + o.w) - Math.max(x, o.x) + gap;
+    const dy = Math.min(y + h, o.y + o.h) - Math.max(y, o.y) + gap;
+    if (dx > 0 && dy > 0) area += dx * dy;
+  }
+  return area;
+}
+// Random spot inside the arena, away from the others. Re-rolls up to PLACE_TRIES times; if all miss (a small
+// phone, a full wave) it walks the arena in 8 px steps for a free spot, first with the gap, then touching allowed;
+// if there is none, it keeps the spot that overlaps least, so the wave never loses a monster.
+function pickSpot(arenaW, arenaH, w, h, others) {
+  const maxX = Math.max(10, arenaW - w - 10);
+  const maxY = Math.max(10, arenaH - h - 10);
+  let best = null, bestArea = Infinity;
+  const tryAt = (x, y, gap) => {
+    const area = clash(x, y, w, h, others, gap);
+    if (!(area > 0)) { best = { x, y }; return true; }
+    if (area < bestArea) { best = { x, y }; bestArea = area; }
+    return false;
+  };
+  for (let i = 0; i < PLACE_TRIES; i++) {
+    if (tryAt(10 + Math.random() * (maxX - 10), 10 + Math.random() * (maxY - 10), GAP)) return best;
+  }
+  for (const gap of [GAP, 0]) {
+    for (let y = 10; y <= maxY; y += 8) {
+      for (let x = 10; x <= maxX; x += 8) if (tryAt(x, y, gap)) return best;
+    }
+  }
+  return best || { x: 10, y: 10 };
+}
+function placeMonster(el, others) {
+  const spot = pickSpot(arena.clientWidth, arena.clientHeight, el.offsetWidth, el.offsetHeight, others);
+  el.style.left = spot.x + 'px';
+  el.style.top  = spot.y + 'px';
+}
+// Phone turned or window resized: the arena and the monsters change size, so move the ones that now overlap
+// another or stick out of the arena.
+function respace() {
+  const placed = [];
+  for (const el of liveMonsters()) {
+    const b = boxOf(el);
+    const out = b.x + b.w > arena.clientWidth || b.y + b.h > arena.clientHeight;
+    if (out || clash(b.x, b.y, b.w, b.h, placed) > 0) placeMonster(el, placed);
+    placed.push(boxOf(el));
+  }
+}
+let respaceTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(respaceTimer);
+  respaceTimer = setTimeout(respace, 150);
+});
 
 function spawnWave() {
   // cancel spawns still pending from the previous wave, then clear leftovers

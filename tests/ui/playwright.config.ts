@@ -2,7 +2,7 @@ import { defineConfig } from '@playwright/test';
 
 // Playwright is a test-only tool here: the games themselves need nothing installed (CLAUDE.md).
 // serve.mjs plays the hub: the repo at /cybele/ with the hub's CSP. Own port, so another repo's server is never reused.
-const PORT = 4193;
+const PORT = Number(process.env.PW_PORT) || 4193; // PW_PORT: another checkout may be testing on 4193
 
 export default defineConfig({
   testDir: '.',
